@@ -6,41 +6,41 @@ import { revalidatePath } from "next/cache";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: process.env.LLM_MODEL });
 
-export async function saveResume(content){
-  const {userId} = await auth();
-  if(!userId) throw new Error("User not found")
+export async function saveResume(content) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("User not found")
 
   const user = await db.user.findUnique({
-    where:{
-      clerkUserId:userId,
+    where: {
+      clerkUserId: userId,
     }
   })
-  
-  
-  if(!user) throw new Error("User not found");
 
-  try{
 
-        await new Promise((res) => setTimeout(res, 1000));
+  if (!user) throw new Error("User not found");
+
+  try {
+
+    await new Promise((res) => setTimeout(res, 1000));
 
     const resume = await db.resume.upsert({
       where: {
-        userId:user.id,
+        userId: user.id,
       },
-      update:{
+      update: {
         content,
       },
-      create:{
-        userId:user.id,
+      create: {
+        userId: user.id,
         content,
       }
     });
     revalidatePath("/resume");
     return resume;
-  } catch(error){
-    console.error("Error saving resume: ",error.message);
+  } catch (error) {
+    console.error("Error saving resume: ", error.message);
     throw new Error("Failed to save resume")
   }
 }
@@ -49,41 +49,41 @@ export async function saveResume(content){
 
 export async function getResume() {
 
-  const {userId} = await auth();
-  if(!userId) throw new Error("User not found")
+  const { userId } = await auth();
+  if (!userId) throw new Error("User not found")
 
   const user = await db.user.findUnique({
-    where:{
-      clerkUserId:userId,
+    where: {
+      clerkUserId: userId,
     }
   })
-  
-  
-  if(!user) throw new Error("User not found");
+
+
+  if (!user) throw new Error("User not found");
 
 
   return await db.resume.findUnique({
-    where:{
-      userId:user.id,
+    where: {
+      userId: user.id,
     }
   })
 
-  
+
 }
 
 
-export async function improveWithAi({current,type}){
-    const {userId} = await auth();
-  if(!userId) throw new Error("User not found")
+export async function improveWithAi({ current, type }) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("User not found")
 
   const user = await db.user.findUnique({
-    where:{
-      clerkUserId:userId,
+    where: {
+      clerkUserId: userId,
     }
   })
-  
-  
-  if(!user) throw new Error("User not found");
+
+
+  if (!user) throw new Error("User not found");
 
 
   const prompt = `
@@ -109,7 +109,7 @@ export async function improveWithAi({current,type}){
     return improvedContent;
   }
 
-   catch (error) {
+  catch (error) {
     console.error("Error improving content:", error);
     throw new Error("Failed to improve content");
   }

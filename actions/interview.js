@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: process.env.LLM_MODEL });
 
 export async function generateQuiz() {
   const { userId } = await auth();
@@ -20,12 +20,10 @@ export async function generateQuiz() {
   });
 
   if (!user) throw new Error("User not found");
-  
+
   const prompt = `
-    Generate 10 technical interview questions for a ${
-      user.industry
-    } professional${
-      user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
+    Generate 10 technical interview questions for a ${user.industry
+    } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
     }.
     
     Each question should be multiple choice with 4 options, out of which only one is the correct answer.
@@ -44,7 +42,7 @@ export async function generateQuiz() {
   `;
 
   try {
-        await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 1000));
 
     const result = await model.generateContent(prompt);
     const response = result.response;
@@ -128,30 +126,30 @@ export async function saveQuizResult(questions, answers, score) {
 }
 
 
-export async function getAssessments(){
-  const {userId} = await auth();
-  if(!userId)  throw new Error("Unauthorized")
+export async function getAssessments() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized")
 
   const user = await db.user.findUnique({
-    where:{
+    where: {
       clerkUserId: userId,
     }
   });
-  
-  if(!user) throw new Error("User not found");
 
-  try{
-    const assessments=await db.assessment.findMany({
-      where:{
-        userId:user.id,
+  if (!user) throw new Error("User not found");
+
+  try {
+    const assessments = await db.assessment.findMany({
+      where: {
+        userId: user.id,
       },
-      orderBy:{
-        createdAt:"asc",
+      orderBy: {
+        createdAt: "asc",
       }
     })
     return assessments
-  }catch(error){
-    console.error("Error in fetching assessments",error);
+  } catch (error) {
+    console.error("Error in fetching assessments", error);
     throw new Error("failed to fetch assessments")
   }
 }
